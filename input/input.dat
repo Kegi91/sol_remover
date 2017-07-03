@@ -1,0 +1,11 @@
+Input_file:			Output_file:
+../input/system_solv.gro	../output/input_example.gro
+
+res_name:		res_size:
+SOL			3
+
+lipid_name:
+DPPC
+
+adjust_low:		adjust_high:
+1			1
