@@ -1,4 +1,4 @@
-from sol_remover import read_n_remove, remove, remove_lims
+from sol_remover import *
 
 # Read the input from input.dat
 read_n_remove()

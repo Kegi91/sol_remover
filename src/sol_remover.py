@@ -8,6 +8,22 @@ def skip_lines(f, i):
     for i in range(i):
         next(f)
 
+def read_gro_line(f_in):
+    l = f_in.readline()
+    if l == '' or len(l)<45:
+        return ''
+
+    # res_num = int(l[0:5])
+    # a_number = int(l[15:20])
+    # x = float(l[20:28])
+    # y = float(l[28:36])
+
+    res_name = l[5:10].strip()
+    a_name = l[10:15].strip()
+    z = float(l[36:44])
+
+    return res_name, a_name, z, l
+
 def read_params():
     f = open("../input/input.dat", 'r')
     params = []
@@ -35,14 +51,13 @@ def read_params():
     return params
 
 def change_mol_number(output_file, removed_lines):
-
-    f_in = open("../output/temp_out","r")
+    f_in = open("temp_out","r")
     f_out = open(output_file, "w")
 
     for line in f_in:
         split = line.split()
 
-        if len(split) == 1:
+        if len(split) == 1: # TODO
             f_out.write(str(int(split[0])-removed_lines)+"\n")
             continue
         else:
@@ -51,22 +66,18 @@ def change_mol_number(output_file, removed_lines):
     f_in.close()
     f_out.close()
 
-    os.system("rm ../output/temp_out")
+    os.system("rm temp_out")
 
 def find_min_n_max(input_file, lipid_name):
-
     f_in = open(input_file, 'r')
+    skip_lines(f_in,2)
     first_meet = True
 
-    for line in f_in:
-        split = line.split()
-        items = len(split)
-
-        if items not in [5,6]:
-            continue
-
-        resname = split[0]
-        z = float(split[-1])
+    while True:
+        try:
+            resname, atom, z, line = read_gro_line(f_in)
+        except ValueError:
+            break
 
         if resname.find(lipid_name) != -1:
             if first_meet:
@@ -82,38 +93,25 @@ def find_min_n_max(input_file, lipid_name):
     return minim, maxim
 
 def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
-
     f = open(input_file, "r")
-    out = open("../output/temp_out", "w")
+    out = open("temp_out", "w")
+    skip_lines(f,2)
 
-    line = f.readline()
-    split = line.split()
     removed_lines = 0
 
-    while line != "":
-        items = len(split)
-
-        if items not in [5,6]:
-            out.write(line)
-            line = f.readline()
-            split = line.split()
-            continue
-
-        resname = split[0]
-        atom = split[1]
-        z = float(split[-1])
+    while True:
+        try:
+            resname, atom, z, line = read_gro_line(f)
+        except ValueError:
+            break
 
         if resname.find(res_name) != -1:
             if z < zmax and z > zmin and atom.find("OW") != -1:
                 skip_lines(f,res_size-1)
-                line = f.readline()
-                split = line.split()
                 removed_lines += res_size
                 continue
 
         out.write(line)
-        line = f.readline()
-        split = line.split()
 
     f.close()
     out.close()
