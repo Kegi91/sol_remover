@@ -1,5 +1,5 @@
 import numpy as np
-import os
+import subprocess as subp
 
 def read_n_split(f):
     return f.readline().split()
@@ -7,6 +7,9 @@ def read_n_split(f):
 def skip_lines(f, i):
     for i in range(i):
         next(f)
+
+def tail(f):
+    return subp.getoutput('tail -1 ' + f) + "\n"
 
 def read_gro_line(f_in):
     l = f_in.readline()
@@ -66,7 +69,7 @@ def change_mol_number(output_file, removed_lines):
     f_in.close()
     f_out.close()
 
-    os.system("rm temp_out")
+    subp.run(["rm", "temp_out"])
 
 def find_min_n_max(input_file, lipid_name):
     f_in = open(input_file, 'r')
@@ -95,7 +98,9 @@ def find_min_n_max(input_file, lipid_name):
 def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
     f = open(input_file, "r")
     out = open("temp_out", "w")
-    skip_lines(f,2)
+
+    out.write(f.readline())
+    out.write(f.readline())
 
     removed_lines = 0
 
@@ -112,6 +117,8 @@ def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
                 continue
 
         out.write(line)
+
+    out.write(tail(input_file))
 
     f.close()
     out.close()
