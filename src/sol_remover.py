@@ -28,7 +28,7 @@ def read_gro_line(f_in):
     return res_name, a_name, z, l
 
 def read_params():
-    f = open("../input/input.dat", 'r')
+    f = open("input.dat", 'r')
     params = []
 
     skip_lines(f,1)
@@ -44,6 +44,7 @@ def read_params():
     skip_lines(f,2)
     split = read_n_split(f)
     params.append(split[0])
+    params.append(split[1])
 
     skip_lines(f,2)
     split = read_n_split(f)
@@ -57,14 +58,13 @@ def change_mol_number(output_file, removed_lines):
     f_in = open("temp_out","r")
     f_out = open(output_file, "w")
 
-    for line in f_in:
-        split = line.split()
+    # Handling the first two lines of the .gro file ------------------
+    f_out.write(f_in.readline())
+    f_out.write("%d\n"%(int(f_in.readline().split()[0])-removed_lines))
+    #  ---------------------------------------------------------------
 
-        if len(split) == 1: # TODO
-            f_out.write(str(int(split[0])-removed_lines)+"\n")
-            continue
-        else:
-            f_out.write(line)
+    for line in f_in:
+        f_out.write(line)
 
     f_in.close()
     f_out.close()
@@ -82,7 +82,7 @@ def find_min_n_max(input_file, lipid_name):
         except ValueError:
             break
 
-        if resname.find(lipid_name) != -1:
+        if resname == lipid_name:
             if first_meet:
                 minim = z
                 maxim = z
@@ -94,6 +94,54 @@ def find_min_n_max(input_file, lipid_name):
                     maxim = z
 
     return minim, maxim
+
+def find_center(input_file, res_name, atom_name):
+    f = open(input_file, 'r')
+    skip_lines(f,2)
+
+    z_sum = 0
+    z_numb = 0
+
+    while True:
+        try:
+            res, atom, z, line = read_gro_line(f)
+        except ValueError:
+            break
+
+        if res == res_name and atom == atom_name:
+            z_sum += z
+            z_numb += 1
+
+    f.close()
+    return z_sum/z_numb
+
+def leaflets(input_file, lipid_name, lim_atom):
+    f = open(input_file, "r")
+    skip_lines(f,2)
+
+    upper_zsum = 0
+    upper_num = 0
+    lower_zsum = 0
+    lower_num = 0
+
+    center = find_center(input_file, lipid_name, lim_atom)
+
+    while True:
+        try:
+            res, atom, z, line = read_gro_line(f)
+        except ValueError:
+            break
+
+        if res == lipid_name and atom == lim_atom:
+            if z > center:
+                upper_zsum += z
+                upper_num += 1
+            else:
+                lower_zsum += z
+                lower_num += 1
+
+    f.close()
+    return lower_zsum/lower_num, upper_zsum/upper_num
 
 def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
     f = open(input_file, "r")
@@ -110,8 +158,8 @@ def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
         except ValueError:
             break
 
-        if resname.find(res_name) != -1:
-            if z < zmax and z > zmin and atom.find("OW") != -1:
+        if resname == res_name:
+            if z < zmax and z > zmin and atom == "OW":
                 skip_lines(f,res_size-1)
                 removed_lines += res_size
                 continue
@@ -125,19 +173,20 @@ def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
 
     change_mol_number(output_file, removed_lines)
 
-    print("Removed: %d molecules = %d atoms"%(removed_lines/res_size, removed_lines))
+    print(
+    "Removed: %d molecules = %d atoms"%(removed_lines/res_size, removed_lines)
+    )
 
 def remove(
-    input_file, output_file, res_name, res_size, lipid_name,
+    input_file, output_file, res_name, res_size, lipid_name, lim_atom,
     adjust_low, adjust_high
 ):
 
-    minim, maxim = find_min_n_max(input_file, lipid_name)
-    minim += adjust_low
-    maxim -= adjust_high
+    lower, upper = leaflets(input_file, lipid_name, lim_atom)
+    lower += adjust_low
+    upper -= adjust_high
 
-    remove_lims(input_file, output_file, minim, maxim, "SOL", 3)
+    remove_lims(input_file, output_file, lower, upper, res_name, res_size)
 
 def read_n_remove():
-    p = read_params()
-    remove(p[0],p[1],p[2],p[3],p[4],p[5],p[6])
+    remove(*read_params())

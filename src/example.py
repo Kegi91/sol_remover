@@ -9,9 +9,10 @@ remove(
     "../output/remove_example.gro",
     "SOL",
     3,
-    "DPPC",
+    "POPC",
+    "P",
     1,
-    3
+    1
 )
 
 remove_lims(

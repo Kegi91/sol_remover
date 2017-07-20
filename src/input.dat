@@ -4,8 +4,8 @@ Input_file:			Output_file:
 res_name:		res_size:
 SOL			3
 
-lipid_name:
-DPPC
+lipid_name:		lim_atom:
+POPC			P
 
 adjust_low:		adjust_high:
-1			1
+0			0
