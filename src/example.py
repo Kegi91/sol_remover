@@ -8,6 +8,7 @@ remove(
     "../input/system_solv.gro",
     "../output/remove_example.gro",
     "SOL",
+    "OW",
     3,
     "POPC",
     "P",
@@ -21,5 +22,6 @@ remove_lims(
     3,
     7,
     "SOL",
+    "OW",
     3
 )

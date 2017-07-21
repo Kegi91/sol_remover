@@ -1,11 +1,33 @@
 Input_file:			Output_file:
 ../input/system_solv.gro	../output/input_example.gro
 
-res_name:		res_size:
-SOL			3
+res_name:	first_atom:		res_size:
+SOL		OW			3
 
 lipid_name:		lim_atom:
 POPC			P
 
 adjust_low:		adjust_high:
 0			0
+
+
+##################### EXPLANATIONS #####################
+
+res_name	=	Name of the residues that are to be removed.
+
+first_atom	=	Name of the first atom of the residue in the .gro file.
+			This atom is used to determine whether the whole residue 
+			is inside the membrane or not.
+
+res_size	=	Number of the atoms in that residue. 
+
+lipid_name	=	Name of the membrane lipid.
+
+lim_atom	=	The atom of the residue lipid_name that is used to calculate
+			the average z component of the upper and the lower leaflets.
+
+adjust_low	=	Manual adjusting of lower leaflet. Positive number moves the 
+			border closer to the middle of the membrane.
+
+adjust_high	=	Manual adjusting of upper leaflet. Positive number moves the 
+			border closer to the middle of the membrane.

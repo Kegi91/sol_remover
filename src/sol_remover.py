@@ -1,4 +1,3 @@
-import numpy as np
 import subprocess as subp
 
 def read_n_split(f):
@@ -39,7 +38,8 @@ def read_params():
     skip_lines(f,2)
     split = read_n_split(f)
     params.append(split[0])
-    params.append(int(split[1]))
+    params.append(split[1])
+    params.append(int(split[2]))
 
     skip_lines(f,2)
     split = read_n_split(f)
@@ -113,7 +113,12 @@ def find_center(input_file, res_name, atom_name):
             z_numb += 1
 
     f.close()
-    return z_sum/z_numb
+
+    try:
+        return z_sum/z_numb
+    except ZeroDivisionError:
+        print("\nNo matches found. Check lipid_name and lim_atom.\n")
+        raise
 
 def leaflets(input_file, lipid_name, lim_atom):
     f = open(input_file, "r")
@@ -141,9 +146,17 @@ def leaflets(input_file, lipid_name, lim_atom):
                 lower_num += 1
 
     f.close()
-    return lower_zsum/lower_num, upper_zsum/upper_num
 
-def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
+    try:
+        return lower_zsum/lower_num, upper_zsum/upper_num
+    except ZeroDivisionError:
+        print("\nNo matches found. Check lipid_name and lim_atom.\n")
+        raise
+
+def remove_lims(
+    input_file, output_file, zmin, zmax, res_name, first_atom, res_size
+):
+
     f = open(input_file, "r")
     out = open("temp_out", "w")
 
@@ -159,7 +172,7 @@ def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
             break
 
         if resname == res_name:
-            if z < zmax and z > zmin and atom == "OW":
+            if z < zmax and z > zmin and atom == first_atom:
                 skip_lines(f,res_size-1)
                 removed_lines += res_size
                 continue
@@ -178,15 +191,20 @@ def remove_lims(input_file, output_file, zmin, zmax, res_name, res_size):
     )
 
 def remove(
-    input_file, output_file, res_name, res_size, lipid_name, lim_atom,
-    adjust_low, adjust_high
+    input_file, output_file, res_name, first_atom, res_size, lipid_name,
+    lim_atom, adjust_low, adjust_high
 ):
 
     lower, upper = leaflets(input_file, lipid_name, lim_atom)
     lower += adjust_low
     upper -= adjust_high
 
-    remove_lims(input_file, output_file, lower, upper, res_name, res_size)
+    remove_lims(
+        input_file, output_file, lower, upper, res_name, first_atom, res_size
+    )
 
 def read_n_remove():
     remove(*read_params())
+
+if __name__ == "__main__":
+    read_n_remove()
