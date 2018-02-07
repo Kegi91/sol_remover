@@ -1,4 +1,106 @@
+#!/usr/bin/env python3
+
+from optparse import OptionParser
 import subprocess as subp
+
+def optP():
+    """Parse command line options.
+    """
+
+    usage="[python3] %prog -f input.dat"
+    description="Membrane solvent remover"
+    version="\n%prog Version 1.0 \n\nRequires Python 3\n" \
+
+    optParser = OptionParser(
+                        usage=usage,
+                        version=version,
+                        description=description
+    )
+
+    optParser.set_defaults(
+                    param_file=None,
+                    input_file=None,
+                    output_file=None,
+                    res_name=None,
+                    first_atom=None,
+                    res_size=None,
+                    lipid_name=None,
+                    lim_atom=None,
+                    adjust_low=None,
+                    adjust_high=None
+    )
+
+    optParser.add_option(
+                    '-f', type='str',
+                    dest='param_file',
+                    help="Parameter file (e.g. input.dat)"
+                    " [default: %default]"
+    )
+
+    optParser.add_option(
+                    '-i', type='str',
+                     dest='input_file',
+                     help="Input 3D structure (gro)"
+                     " [default: %default]"
+    )
+
+    optParser.add_option(
+                    '-o', type='str',
+                     dest='output_file',
+                     help="Output 3D structure (gro)"
+                     " [default: %default] "
+    )
+
+    optParser.add_option(
+                    '--rn', type='str',
+                     dest='res_name',
+                     help="Name of residues to be removed"
+                     " [default: %default]"
+    )
+
+    optParser.add_option(
+                    '--ra', type='str',
+                     dest='first_atom',
+                     help="First atom of residue rn"
+                     " [default: %default] "
+    )
+
+    optParser.add_option(
+                    '--rs', type='int',
+                     dest='res_size',
+                     help="Size of the residue rn"
+                     " [default: %default]"
+    )
+
+    optParser.add_option(
+                    '--ln', type='str',
+                     dest='lipid_name',
+                     help="Name of the lipid from which to calculate the membrane plane"
+                     " [default: %default]"
+    )
+
+    optParser.add_option(
+                    '--la', type='str',
+                     dest='lim_atom',
+                     help="Atom name of ln used for membrane plane calculation"
+                     " [default: %default] "
+    )
+
+    optParser.add_option(
+                    '--al', type='float',
+                     dest='adjust_low',
+                     help="Manual adjusting of lower leaflet"
+                     " [default: %default]"
+    )
+
+    optParser.add_option(
+                    '--ah', type='float',
+                     dest='adjust_high',
+                     help="Manual adjusting of upper leaflet leaflet"
+                     " [default: %default]"
+    )
+
+    return optParser.parse_args()
 
 def read_n_split(f):
     return f.readline().split()
@@ -12,7 +114,7 @@ def tail(f):
 
 def read_gro_line(f_in):
     l = f_in.readline()
-    if l == '' or len(l)<45:
+    if len(l)<45:
         return ''
 
     # res_num = int(l[0:5])
@@ -26,8 +128,8 @@ def read_gro_line(f_in):
 
     return res_name, a_name, z, l
 
-def read_params():
-    f = open("input.dat", 'r')
+def read_params(fname):
+    f = open(fname, 'r')
     params = []
 
     skip_lines(f,1)
@@ -204,7 +306,23 @@ def remove(
     )
 
 def read_n_remove():
-    remove(*read_params())
+    opt, args = optP()
+    params = [None]*9
+
+    if opt.param_file != None:
+        params = read_params(opt.param_file)
+
+    for i, key in enumerate(opt.__dict__.keys()):
+        opt_dict = opt.__dict__
+
+        if opt_dict[key] != None and i != 0:
+            params[i-1] = opt_dict[key]
+
+    if None in params:
+        print("Some params missing.\n")
+        sys.exit(1)
+
+    remove(*params)
 
 if __name__ == "__main__":
     read_n_remove()
