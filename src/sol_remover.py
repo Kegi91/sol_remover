@@ -307,22 +307,35 @@ def remove(
 
 def read_n_remove():
     opt, args = optP()
-    params = [None]*9
+
+    params = [
+        "input_file",
+        "output_file",
+        "res_name",
+        "first_atom",
+        "res_size",
+        "lipid_name",
+        "lim_atom",
+        "adjust_low",
+        "adjust_high"
+    ]
+
+    params_read = [None]*9
 
     if opt.param_file != None:
-        params = read_params(opt.param_file)
+        params_read = read_params(opt.param_file)
 
-    for i, key in enumerate(opt.__dict__.keys()):
+    for i in range(len(params)):
         opt_dict = opt.__dict__
 
-        if opt_dict[key] != None and i != 0:
-            params[i-1] = opt_dict[key]
+        if opt_dict[params[i]] != None:
+            params_read[i] = opt_dict[key]
 
-    if None in params:
+    if None in params_read:
         print("Some params missing.\n")
         sys.exit(1)
 
-    remove(*params)
+    remove(*params_read)
 
 if __name__ == "__main__":
     read_n_remove()
